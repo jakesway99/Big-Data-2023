@@ -90,6 +90,12 @@ complaint_after_2015_df3.select("VIC_RACE").distinct().show()
 # victim races VS. complaint count each month after 2015-01-01
 complaint_after_2015_df3.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month', 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').show()
 
+# plot the victim races VS. complaint count
+pd_df = complaint_after_2015_df3.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month', 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').toPandas()
+pd_df = pd_df.pivot(index='Crime_Year_Month', columns='VIC_RACE', values='count')
+pd_df.plot()
+plt.show()
+
 # interested in asian victims, exclude the rows that are not asian victims
 complaint_after_2015_asian = complaint_after_2015_df3.filter(complaint_after_2015_df3['VIC_RACE']=="ASIAN / PACIFIC ISLANDER")
 
@@ -107,3 +113,4 @@ print(complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNu
 complaint_after_2015_df4 = complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNotNull())
 
 complaint_after_2015_df4.groupBy('ADDR_PCT_CD',F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month').count().orderBy('ADDR_PCT_CD', F.year('Crime_Date'), F.month('Crime_Date')).show()
+
