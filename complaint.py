@@ -2,6 +2,9 @@ from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 
 cf = SparkConf()
 cf.set("spark.submit.deployMode", "client")
@@ -48,10 +51,20 @@ complaint_df2.show()
 # interested in complaints happened after 2015-01-01, excludes rows that have date before 2015-01-01
 complaint_after_2015_df = complaint_df2.withColumn('Crime_Date', F.to_date('Crime_Date', 'M/d/y')).filter((F.col('Crime_Date') >= F.lit('2015-01-01')))
 
+# combine year and month as Crime_Year_Month
+complaint_after_2015_df = complaint_after_2015_df.withColumn('Crime_Year_Month', F.concat(F.year('Crime_Date'),F.lit('-'), F.month('Crime_Date')))
+complaint_after_2015_df.show()
+
 complaint_after_2015_df.createOrReplaceTempView("complaint_after_2015")
 
 # how many complaints occurred each month after 2015-01-01?
-complaint_after_2015_df.groupBy(F.year('Crime_Date'), F.month('Crime_Date')).count().orderBy(F.year('Crime_Date'), F.month('Crime_Date')).show()
+complaint_after_2015_df.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date')).show()
+
+# plot the complaint count by months
+pd_df = complaint_after_2015_df.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date')).toPandas()
+pd_df.plot('Crime_Year_Month', 'count', legend=False)
+#plt.xticks(range(len(pd_df['Crime_Year_Month'])), pd_df['Crime_Year_Month'], size='small', rotation=45)
+plt.show()
 
 # want to analyze complaints based on offense types
 # examine the null values in offense description column, and their correlated key codes
@@ -61,7 +74,8 @@ spark.sql("SELECT DISTINCT(KY_CD, OFNS_DESC) FROM complaint_after_2015 WHERE OFN
 complaint_after_2015_df2 = complaint_after_2015_df.filter(complaint_after_2015_df['OFNS_DESC'].isNotNull())
 
 # how many complaints based on offense types occurred each month after 2015-01-01?
-complaint_after_2015_df2.groupBy(F.year('Crime_Date'), F.month('Crime_Date'),'OFNS_DESC').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'), 'OFNS_DESC').show()
+complaint_after_2015_df2.groupBy(F.year('Crime_Date'), F.month('Crime_Date'),'Crime_Year_Month','OFNS_DESC').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'), 'OFNS_DESC').show()
+
 
 # want to analyze victim race
 # examine the values in victim race column
@@ -74,7 +88,22 @@ complaint_after_2015_df3 = complaint_after_2015_df3.withColumn('VIC_RACE', F.whe
 complaint_after_2015_df3.select("VIC_RACE").distinct().show()
 
 # victim races VS. complaint count each month after 2015-01-01
-complaint_after_2015_df3.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').show()
+complaint_after_2015_df3.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month', 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').show()
 
+# interested in asian victims, exclude the rows that are not asian victims
+complaint_after_2015_asian = complaint_after_2015_df3.filter(complaint_after_2015_df3['VIC_RACE']=="ASIAN / PACIFIC ISLANDER")
 
+complaint_after_2015_asian.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month', 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').show()
 
+# plot the Asian victim complaint count by months
+pd_df = complaint_after_2015_asian.groupBy(F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month', 'VIC_RACE').count().orderBy(F.year('Crime_Date'), F.month('Crime_Date'),  'VIC_RACE').toPandas()
+pd_df.plot('Crime_Year_Month', 'count', legend=False)
+#plt.xticks(range(len(pd_df['Crime_Year_Month'])), pd_df['Crime_Year_Month'], size='small', rotation=45)
+plt.show()
+
+# complaint cases in precincts
+# 41 rows have null in precinct column, exclude them
+print(complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNull()).count())
+complaint_after_2015_df4 = complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNotNull())
+
+complaint_after_2015_df4.groupBy('ADDR_PCT_CD',F.year('Crime_Date'), F.month('Crime_Date'), 'Crime_Year_Month').count().orderBy('ADDR_PCT_CD', F.year('Crime_Date'), F.month('Crime_Date')).show()
