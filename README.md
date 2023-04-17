@@ -19,10 +19,12 @@ April 17th progress
 1. Created a Crime_Year_Month column based on Crime_Date, this is used in plots
 2. Created a plot for total complaints vs Crime_Year_Date
 <img width="609" alt="Crime Year Month" src="https://user-images.githubusercontent.com/55362828/232588781-e2efc879-3d3b-4132-816b-2b7a7f235a3a.png">
-3. Interested in asian victims, excluded the rows that are not asian victims, group by year and month
+3. Created a plot for victim races VS. complaint count every month
+<img width="644" alt="Screen Shot 2023-04-17 at 3 46 38 PM" src="https://user-images.githubusercontent.com/55362828/232594387-48f17b50-82db-4d18-be8a-26da758e612a.png">
+4. Interested in asian victims, excluded the rows that are not asian victims, group by year and month
 <img width="647" alt="onty showing top 20 rows" src="https://user-images.githubusercontent.com/55362828/232588928-a79903b2-860a-4928-ae61-c69796bfd5dd.png">
-4. Crated a plot for Asian victim complaints vs months
+5. Crated a plot for Asian victim complaints vs months
 <img width="577" alt="Crime Year Month" src="https://user-images.githubusercontent.com/55362828/232588975-f627d599-12e0-4e07-93a7-0af056fe7541.png">
-5. Interested in complaint cases in precincts, examined the null values in precinct column and excluded them, group by precinct, year and month
+6. Interested in complaint cases in precincts, examined the null values in precinct column and excluded them, group by precinct, year and month
 <img width="570" alt="2015-11" src="https://user-images.githubusercontent.com/55362828/232589116-d99935c8-d2df-4693-93c4-0cf73fd0e4f0.png">
 
