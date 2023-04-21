@@ -25,3 +25,7 @@ April 20th progress
 2. Classified and created plots for homicide, assaults, robbery, burglary, larceny, motor vehicle theft and drug offenses
 3. Made the tables look nicer (show only the year-month)
 
+April 21st progress - (More Data Cleaning)
+1. Checked and corrected the uniqueness constraints
+2. Excluded rows with null values in Crime_Date column
+3. Added labels and titles for plots
