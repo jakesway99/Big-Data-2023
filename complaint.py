@@ -42,14 +42,33 @@ complaint_df = spark.sql("SELECT CMPLNT_NUM, CMPLNT_FR_DT, CMPLNT_TO_DT, ADDR_PC
 
 print("The unioned dataset has "+str(complaint_df.count())+" rows") # 8357267
 
+# check the uniqueness constraints
+complaint_df.groupBy('CMPLNT_NUM').count().orderBy('count', ascending=False).show()
+# exclude duplicate id rows
+complaint_df = complaint_df.dropDuplicates(["CMPLNT_NUM"])
+# check again
+complaint_df.groupBy('CMPLNT_NUM').count().orderBy('count', ascending=False).show()
+
+print("The unioned dataset after uniqueness constraints has "+str(complaint_df.count())+" rows") # 8348469
+
 # CMPLNT_FR_DT is Exact date of occurrence for the reported event (or starting date of occurrence, if CMPLNT_TO_DT exists)
 # CMPLNT_TO_DT is Ending date of occurrence for the reported event, if exact time of occurrence is unknown
 # create a Crime_Date column(pick CMPLNT_FR_DT if it exists, otherwise pick CMPLNT_TO_DT)
 complaint_df2 = complaint_df.withColumn('Crime_Date', F.when(complaint_df['CMPLNT_FR_DT']=='null', 'CMPLNT_TO_DT').otherwise(complaint_df['CMPLNT_FR_DT']))
 complaint_df2.show(5)
+print("Null values in Crime_Date column: "+str(complaint_df2.filter(complaint_df2['Crime_Date'].isNull()).count())) # 655
 
-# interested in complaints happened after 2015-01-01, excludes rows that have date before 2015-01-01
-complaint_after_2015_df = complaint_df2.withColumn('Crime_Date', F.to_date('Crime_Date', 'M/d/y')).filter((F.col('Crime_Date') >= F.lit('2015-01-01')))
+# exclude null dates
+complaint_df2 = complaint_df2.filter(complaint_df2['Crime_Date'].isNotNull())
+
+# examine the crime date
+complaint_df2 = complaint_df2.withColumn('Crime_Date', F.to_date('Crime_Date', 'M/d/y'))
+complaint_df2.select('Crime_Date').orderBy('Crime_Date').show()
+complaint_df2.select('Crime_Date').orderBy('Crime_Date', ascending=False).show()
+
+# found outlier & interested in complaints happened after 2015-01-01, excludes rows that have date before 2015-01-01
+complaint_after_2015_df = complaint_df2.filter((F.col('Crime_Date') >= F.lit('2015-01-01')))
+
 
 # combine year and month as Crime_Year_Month
 complaint_after_2015_df = complaint_after_2015_df.withColumn('Crime_Year_Month', F.concat(F.year('Crime_Date'),F.lit('-'), F.month('Crime_Date')))
@@ -66,6 +85,9 @@ complaint_month.show()
 pd_df = complaint_month.toPandas()
 pd_df.plot('Crime_Year_Month', 'count', legend=False)
 #plt.xticks(range(len(pd_df['Crime_Year_Month'])), pd_df['Crime_Year_Month'], size='small', rotation=45)
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("The Number of Crimes Occurred From 2015 - 2022")
 plt.show()
 
 # want to analyze complaints based on offense level
@@ -80,6 +102,9 @@ complaint_offense_level.show()
 pd_df = complaint_offense_level.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='LAW_CAT_CD', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("The Number of Crimes in Three Offence Levels")
 plt.show()
 
 
@@ -110,6 +135,9 @@ homicide.show()
 
 pd_df = homicide.toPandas()
 pd_df.plot('Crime_Year_Month', 'count', legend=False)
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Homicide')
+plt.title("Homicide")
 plt.show()
 
 # how many assaults occured?
@@ -119,6 +147,9 @@ assaults.show()
 pd_df = assaults.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='OFNS_DESC', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Assults')
+plt.title("Assults")
 plt.show()
 
 # how many robbery, burglary, and larceny occurred?
@@ -128,6 +159,9 @@ rbl.show()
 pd_df = rbl.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='OFNS_DESC', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("Robbery, Burglary, and Larceny")
 plt.show()
 
 # how many motor vehicle theft occurred?
@@ -137,6 +171,9 @@ mvt.show()
 pd_df = mvt.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='OFNS_DESC', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("Motor Vehicle Theft")
 plt.show()
 
 
@@ -147,6 +184,9 @@ do.show()
 pd_df = do.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='OFNS_DESC', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("Drug Offense")
 plt.show()
 
 # want to analyze victim race
@@ -168,6 +208,9 @@ complaint_race.show()
 pd_df = complaint_race.toPandas()
 pd_df = pd_df.pivot(index='Crime_Year_Month', columns='VIC_RACE', values='count')
 pd_df.plot()
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("Victim Race")
 plt.show()
 
 # interested in asian victims, exclude the rows that are not asian victims
@@ -179,10 +222,13 @@ complaint_asian = complaint_asian.select('Crime_Year_Month', 'count')
 pd_df = complaint_asian.toPandas()
 pd_df.plot('Crime_Year_Month', 'count', legend=False)
 #plt.xticks(range(len(pd_df['Crime_Year_Month'])), pd_df['Crime_Year_Month'], size='small', rotation=45)
+plt.xlabel('Crime Month (yyyy-MM)')
+plt.ylabel('The Number of Crimes')
+plt.title("Asian/Pacific Islander Victims")
 plt.show()
 
 # complaint cases in precincts
-# 41 rows have null in precinct column, exclude them
+# 32 rows have null in precinct column, exclude them
 print("Null values in precinct column: " + str(complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNull()).count()))
 
 complaint_precinct = complaint_after_2015_df.filter(complaint_after_2015_df['ADDR_PCT_CD'].isNotNull())
