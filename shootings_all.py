@@ -4,7 +4,7 @@ import pyspark.sql.functions as f
 from pyspark.sql.types import BooleanType
 import matplotlib.pyplot as plt
 
-
+# needs occur_date column
 def generate_graph_pd(df):
     shooting_df = df.withColumn('year', f.year('occur_date')).withColumn('month', f.month('occur_date'))
     shooting_df.createOrReplaceTempView("shootings")
@@ -43,7 +43,7 @@ all_shooting_df = shooting_df_new.union(shooting_df_old)
 all_shooting_df = all_shooting_df.dropDuplicates(['incident_key'])
 all_shooting_df.createOrReplaceTempView("shootings")
 
-# all_shooting_df.write.option("header", True).csv("shootings_all.csv")
+all_shooting_df.coalesce(1).write.csv("output.csv", header=True)
 
 precinct_neighborhood.createOrReplaceTempView("neighborhood")
 shooting_neighborhood_df = spark.sql(
