@@ -1,9 +1,7 @@
 import json
 import csv
 import os
-
-# gets the neighborhoods from the NTA geojson
-
+# Open the GeoJSON file and load it into a Python dictionary
 with open("NTA_json.geojson") as f:
     data = json.load(f)
 
