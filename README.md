@@ -22,4 +22,4 @@ To Reproduce Shooting Analysis:
    - this script requires NTA_json.geojson in your main directory
 5. Run shootings_graphs.py with input shootings_nta_incomes.csv
 
-Note: the ntacode_incomes.csv is not easily reproducible. Running get_neighborhoods_nta.py yields the all_ntanames.csv, but that file was then manually populated with incomes.
+Note: the ntacode_incomes.csv is not easily reproducible. Running get_neighborhoods_nta.py yields the all_ntanames.csv, but that file was then manually populated with incomes for each neighborhood.
