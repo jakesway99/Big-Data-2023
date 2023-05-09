@@ -48,8 +48,8 @@ all_shooting_df = shooting_df_new.union(shooting_df_old)
 all_shooting_df = all_shooting_df.dropDuplicates(['incident_key'])
 all_shooting_df.createOrReplaceTempView("shootings")
 
-all_shooting_df.coalesce(1).write.csv("shootings_all_output.csv", header=True)
-
+all_shooting_df.coalesce(1).write.csv("shootings_all_output", header=True)
+_
 count_by_year_month_pd = generate_graph_pd(all_shooting_df)
 
 # Create a line plot
